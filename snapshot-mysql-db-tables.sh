@@ -137,6 +137,16 @@ fi
 mysql $MYSQL_HUP --skip-column-names -e"SHOW VARIABLES LIKE '%version%';"
 echo " "
 
+echo "Doing a mysqlcheck --all-databases --check --auto-repair"
+while read line; do
+
+  # skip database tables that are okay
+  echo "$line"|grep -q OK$ && continue
+
+  echo "WARNING: $line"
+done < <(mysqlcheck $MYSQL_HUP --all-databases --check-only-changed --auto-repair)
+echo " "
+
 # dump grants
 if [ -z "$TEST_RUN" ]; then
 	echo "Dumping GRANTs to $BACKUP_DIR/mysql-grants-$MYSQL_HOST.sql"
@@ -145,6 +155,7 @@ else
 	echo "(TEST RUN) Skipping GRANTs dump"
 fi
 echo " "
+
 
 # get database list
 echo "Getting database list to dump ... "
@@ -166,6 +177,7 @@ for db in $databaselist; do
 	mkdir -p $BACKUP_DIR/$db
 
 	if test $CLEAN_DUMP_DIRS -eq 1 ;then
+		echo "Cleaning files: $BACKUP_DIR/$db/{*.sql*,*.txt}"
 		rm -f $BACKUP_DIR/$db/*.sql* $BACKUP_DIR/$db/*.txt
 	fi
 
@@ -294,7 +306,7 @@ for db in $databaselist; do
 		engine=`echo ${DBTBNG} | sed 's/\./ /g' | awk '{print $3}'`
 
 		if [ -z "$TEST_RUN" ]; then
-			printf '        Dumping %s table as: %s.sql' $engine $table
+			printf '            Dumping %s table as: %s.sql' $engine $table
 		else
 			printf '          %s table: %s' $engine $table
 		fi
@@ -362,8 +374,6 @@ for db in $databaselist; do
 		fi
 
 		printf '\n'
-
-		#TODO create restore script
 		
 	done
 
@@ -378,6 +388,10 @@ for db in $databaselist; do
 		echo \" \"
 		
 	" >>$restore_file
+
+	if [ -z "$TEST_RUN" ]; then
+		echo "            RESTORE bash script created: restore-$db.sh"
+	fi
 
 	# uncomment the following line if you want to test just dumping the first database on list
 	# exit 1;
