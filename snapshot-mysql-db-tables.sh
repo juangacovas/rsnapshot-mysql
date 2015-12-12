@@ -380,7 +380,7 @@ for db in $databaselist; do
 	" >>$restore_file
 
 	# uncomment the following line if you want to test just dumping the first database on list
-	exit 1;
+	# exit 1;
 
 done
 
