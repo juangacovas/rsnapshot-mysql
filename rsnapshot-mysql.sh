@@ -47,6 +47,9 @@ RESTOREDB_SUFFIX="_restored"
 # For rsnapshot tool, this is not needed since all files and dirs created by this script at working dir. will be moved
 CLEAN_DUMP_DIRS=0
 
+# uncomment this line if you want to check all tables before trying to dump
+#CHECK_TABLES="please"
+
 ##
 # normally you don't want to touch anything else beyond this point of the script
 ##
@@ -137,15 +140,18 @@ fi
 mysql $MYSQL_HUP --skip-column-names -e"SHOW VARIABLES LIKE '%version%';"
 echo " "
 
-echo "Doing a mysqlcheck --all-databases --check --auto-repair"
-while read line; do
-
-  # skip database tables that are okay
-  echo "$line"|grep -q OK$ && continue
-
-  echo "WARNING: $line"
-done < <(mysqlcheck $MYSQL_HUP --all-databases --check-only-changed --auto-repair)
-echo " "
+# check tables?
+if [ ! -z "$CHECK_TABLES" ]; then
+	echo "Doing a mysqlcheck --all-databases --check --auto-repair"
+	while read line; do
+	
+	  # skip database tables that are okay
+	  echo "$line"|grep -q OK$ && continue
+	
+	  echo "WARNING: $line"
+	done < <(mysqlcheck $MYSQL_HUP --all-databases --check --all-in-1 --auto-repair)
+	echo " "
+fi
 
 # dump grants
 if [ -z "$TEST_RUN" ]; then
