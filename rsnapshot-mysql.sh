@@ -1,17 +1,17 @@
 #!/bin/bash
 ############################################################################################################################################################################
 #
-# Dump all mysql databases, one file per table
+# Dump all mysql databases from a host, one file per table
 #
 #   By Juanga Covas 2015 for WPC7.com
 #
-#   with tips from http://dba.stackexchange.com/questions/20/how-can-i-optimize-a-mysqldump-of-a-large-database
+#   	with tips from http://dba.stackexchange.com/questions/20/how-can-i-optimize-a-mysqldump-of-a-large-database
 #
 # Features:
-#   - Allows to choose compression type for dumps (none, gzip, bzip2).
+#   - Allows to choose compression type for dumps (none, gzip or bzip2).
 #   - Automatically fetches database names from mysql host and creates a directory for each database.
-#	- Dumps each table to its own file (.sql, .sql.gz or .sql.bz2) under the database name directory.
-#   - Handle dump of databases tables with different engines: MyISAM or InnoDB.
+#	- Dump each table to its own file (.sql, .sql.gz or .sql.bz2) under a directory named as the database.
+#   - Handle dump of database tables with different engines: MyISAM, InnoDB...
 #	- Handle dumps from local or remote mysql hosts.
 #	- Ready to work with "backup_script" feature of rsnapshot, an incremental snapshot utility for local and remote filesystems.
 #   - Creates a convenient restore script (BASH) for each database, under each dump directory.
@@ -21,8 +21,9 @@
 
 # The main reason to dump tables to individual files, instead of a full file per database is to save more disk space when using incremental, link-based backup systems.
 # This way more files have a chance to be 'the same than previous backup or snapshot', at the cost of a more complicated restore process which is also provided by this script.
-# Having individual files per table also allows to better dump tables on different engines: InnoDB (--single-transaction) or MyISAM (--lock-tables)
+# Having individual files per table also allows to better 'mysqldump' the tables of different engines: InnoDB (--single-transaction) or MyISAM (--lock-tables)
 
+## START EDITING VARIABLES HERE:
 
 # Path where a directory <databasename> will be created for each database (no trailing slash).
 # If you're using rsnapshot, this directory should be somewhere in the current working directory
@@ -60,7 +61,7 @@ TIMESTAMP=$(date +"%Y-%m-%d-%H.%M")
 
 # show banner
 echo "-----------------------------------------------------------------------------------------"
-echo "snapshot-mysql-db-tables.sh    by Juanga Covas 2015"
+echo "rsnapshot-mysql.sh    by Juanga Covas 2015"
 echo " "
 
 # show usage if not enough arguments are given
@@ -69,7 +70,8 @@ if [ -z $2 ] ;then
 	echo "Required parameters: dbhost        compression   [test]"
 	echo "            Example: my.db.server  none|gz|bz2   test"
 	echo " "
-	echo "Will try to connect with user: remotebackup  password: /root/snapshot-db-pwd.txt"
+	echo "  Will try to connect with user: $MYSQL_USER"
+	echo "Password will be read from file: $MYSQL_PASSWORD_FILE"
 	exit 1;
 fi
 
@@ -77,6 +79,15 @@ fi
 MYSQL_HOST=$1
 COMPRESSION=$2
 TEST_RUN=$3
+
+# common flags for mysqldump command
+MYSQL_DUMP_FLAGS="--compress --hex-blob --force --skip-dump-date"
+
+if [ $MYSQL_HOST == "localhost" ] || [ $MYSQL_HOST == "127.0.0.1" ] ;then
+	# do not need to compress if host is localhost
+	MYSQL_DUMP_FLAGS="--hex-blob --force --skip-dump-date"
+fi
+
 
 # check the provided file for mysql password
 if [ ! -f $MYSQL_PASSWORD_FILE ] ;then 
@@ -87,12 +98,12 @@ if [ ! -s $MYSQL_PASSWORD_FILE ] ;then
 	echo "ERROR: File is empty: $MYSQL_PASSWORD_FILE"
 	exit 1
 fi
+
 # get mysql password from defined file, expecting one line, one word, filtering any newlines
 MYSQL_PASSWORD=`printf "%s" "$(< $MYSQL_PASSWORD_FILE)"`
+
 # host, user, password for mysql
 MYSQL_HUP="--host=$MYSQL_HOST --user=$MYSQL_USER -p$MYSQL_PASSWORD"
-# common flags for dump
-MYSQL_DUMP_FLAGS="--compress --hex-blob --force --single-transaction --skip-dump-date"
 
 echo "Will try to dump databases from: $MYSQL_HOST to: $BACKUP_DIR"
 echo " "
@@ -285,6 +296,10 @@ for db in $databaselist; do
 	echo \"Mysql connection OK.\"
 	echo \" \"
 
+	echo \"READY TO GO ... DUMP TO DB: \$RESTOREDB \$MYSQL_HUP_PRINT\"
+	echo \" \"
+	read -p \"Press [Enter] to confirm injection of ALL the scheduled files\"
+	echo \" \"
 	echo \"mysql> CREATE DATABASE IF NOT EXISTS \$RESTOREDB;\"
 	mysql \$MYSQL_HUP -e\"CREATE DATABASE IF NOT EXISTS \$RESTOREDB;\"
 
@@ -294,11 +309,6 @@ for db in $databaselist; do
 		exit 1
 	fi
 	echo \"OK. Database \$RESTOREDB is created.\"
-	echo \" \"
-
-	echo \"READY TO GO ... DUMP TO DB: \$RESTOREDB \$MYSQL_HUP_PRINT\"
-	echo \" \"
-	read -p \"Press [Enter] to confirm injection of ALL the scheduled files\"
 	echo \" \"
 	" >$restore_file
 
