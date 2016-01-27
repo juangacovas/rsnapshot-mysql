@@ -3,7 +3,7 @@
 #
 # Dump all mysql databases from a host, one file per table
 #
-#   By Juanga Covas 2015 for WPC7.com
+#   By Juanga Covas 2015-2016 for WPC7.com
 #
 #   	with tips from http://dba.stackexchange.com/questions/20/how-can-i-optimize-a-mysqldump-of-a-large-database
 #
@@ -61,7 +61,7 @@ TIMESTAMP=$(date +"%Y-%m-%d-%H.%M")
 
 # show banner
 echo "-----------------------------------------------------------------------------------------"
-echo "rsnapshot-mysql.sh    by Juanga Covas 2015"
+echo "rsnapshot-mysql.sh    by Juanga Covas 2015-2016"
 echo " "
 
 # show usage if not enough arguments are given
@@ -223,11 +223,11 @@ for db in $databaselist; do
 
 	#########################################################################
 	#
-	#	Database Restore script for backup:
+	#	Database Restore script for:
 	#
-	#	from host: $MYSQL_HOST
-	#		   db: $db
-	#		 date: $TIMESTAMP
+	#	backup done from host: $MYSQL_HOST
+	#		         database: $db
+	#		      backup date: $TIMESTAMP
 	#
 	#########################################################################
 
@@ -264,15 +264,16 @@ for db in $databaselist; do
 	fi
 
 	echo \" \"
-	echo \"Database Restore script for backup:\"
+	echo \"Database Restore script for:\"
 	echo \" \"
-	echo \"      from host: $MYSQL_HOST\"
-	echo \"             db: $db\"
-	echo \"           date: $TIMESTAMP\"
+	echo \" backup done from host: $MYSQL_HOST\"
+	echo \"              database: $db\"
+	echo \"           backup date: $TIMESTAMP\"
 	echo \" \"
 	echo \"RESTORE TO HOST: \$1\"
 	echo \"  RESTORE TO DB: \$RESTOREDB\"
 	echo \" \"
+	echo \"#########################################################################\"
 	echo \"NOTICE! Restore will DROP each TABLE for each backup file, but does NOT drop *other* tables that may exist.\"
 	echo \" \"
 	for DBTBNG in \`cat $db/$db-engine-table-list.txt\`; do
