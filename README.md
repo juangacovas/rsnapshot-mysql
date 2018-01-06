@@ -1,6 +1,6 @@
 # rsnapshot-mysql
 
-This is a rsnapshot friendly tool that allows to pull all MySQL databases from a host, creating One File Per Table and a convenient restore script
+This is a rsnapshot friendly tool that allows to pull all MySQL databases from a host, creating One File Per Table and a convenient restore script for each database
 
 Features:
   - Handle dumps from local or remote MySQL hosts.
