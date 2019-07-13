@@ -7,7 +7,7 @@
 #
 ############################################################################################################################################################################
 #
-#   By Juanga Covas 2015-2017
+#   By Juanga Covas 2015-2018
 #
 #   	with tips from http://dba.stackexchange.com/questions/20/how-can-i-optimize-a-mysqldump-of-a-large-database
 ############################################################################################################################################################################
@@ -104,7 +104,7 @@ fi
 # common flags for mysqldump command
 MYSQL_DUMP_FLAGS="--compress --hex-blob --force --skip-dump-date"
 
-if [ $MYSQL_HOST == "localhost" ] || [ $MYSQL_HOST == "127.0.0.1" ] ;then
+if [[ $MYSQL_HOST == "localhost" ]] || [[ $MYSQL_HOST == "127.0.0.1" ]] ;then
 	# do not need to compress if host is localhost
 	MYSQL_DUMP_FLAGS="--hex-blob --force --skip-dump-date"
 fi
@@ -133,13 +133,13 @@ if [ ! -z "$TEST_RUN" ] ;then
 	echo " "
 fi
 
-if [ $COMPRESSION == "gz" ] ;then
+if [[ $COMPRESSION == "gz" ]] ;then
 	echo "Compress to .sql.gz (gzip)"
 else
-	if [ $COMPRESSION == "bz2" ] ;then
+	if [[ $COMPRESSION == "bz2" ]] ;then
 		echo "Compress to .sql.bz2 (bzip2)"
 	else
-		if [ $COMPRESSION == "none" ] ;then
+		if [[ $COMPRESSION == "none" ]] ;then
 			echo "No compression: .sql"
 		else
 			echo "ERROR: valid compression parameter is none|gz|bz2"
@@ -156,7 +156,7 @@ echo " "
 printf 'Testing connection to MySQL ... '
 
 RESULT=`mysqlshow $MYSQL_HUP | grep -v Wildcard | grep -o Databases`
-if [ "$RESULT" == "Databases" ]; then
+if [[ "$RESULT" == "Databases" ]]; then
 	printf "OK.\n"
 else
 	printf "ERROR: Cannot connect to MySQL server. Aborting. Using password from: $MYSQL_CNF_FILE\n\n"
@@ -207,7 +207,7 @@ databaselist=`mysql $MYSQL_HUP --no-auto-rehash -e "SHOW DATABASES;" | grep -Ev 
 for db in $databaselist; do
 
 	# exclude system and other databases
-	if [ $db == "mysql" ] || [ $db == "phpmyadmin" ] ;then
+	if [[ $db == "mysql" ]] || [[ $db == "phpmyadmin" ]] ;then
 		continue
 	fi
 
@@ -325,7 +325,7 @@ for db in $databaselist; do
 	echo \"mysql> CREATE DATABASE IF NOT EXISTS \$RESTOREDB;\"
 	mysql \$MYSQL_HUP -e\"CREATE DATABASE IF NOT EXISTS \$RESTOREDB;\"
 
-	RESULT=\`mysqlshow \$MYSQL_HUP | grep -v Wildcard | grep -o \$RESTOREDB\`
+	RESULT=\`mysqlshow \$MYSQL_HUP | grep -v Wildcard | grep -o \$RESTOREDB | uniq\`
 	if [ \"\$RESULT\" != \"\$RESTOREDB\" ]; then
 		echo \"Could connect, but could NOT create database: \$RESTOREDB using credentials from: \$MYSQL_CNF_FILE\"
 		exit 1
@@ -359,13 +359,13 @@ for db in $databaselist; do
 
 		# use special flags for InnoDB or MyISAM
 		ENGINE_OPT=""
-		if [ $engine == "InnoDB" ] ;then
+		if [[ $engine == "InnoDB" ]] ;then
 			ENGINE_OPT="--single-transaction"
 		else
-			if [ $engine == "MyISAM" ] ;then
+			if [[ $engine == "MyISAM" ]] ;then
 				ENGINE_OPT="--lock-tables"
 			else
-				if [ $engine == "MEMORY" ] ;then
+				if [[ $engine == "MEMORY" ]] ;then
 					printf ' NOTICE: MEMORY table. '
 				else
 					printf ' NOTICE: Unexpected engine: NO ENGINE_OPT SET. '
@@ -377,7 +377,7 @@ for db in $databaselist; do
 
 			# dump the table and add lines to restore script
 
-			if [ $COMPRESSION == "gz" ] ;then
+			if [[ $COMPRESSION == "gz" ]] ;then
 				printf '.gz ... '
 				filedump="$BACKUP_DIR/$db/$db-$table.sql.gz"
 				restorefiledump=$(basename $filedump)
@@ -389,7 +389,7 @@ for db in $databaselist; do
 				zcat $db/$restorefiledump | mysql \$MYSQL_HUP --default-character-set=utf8 \$RESTOREDB" >>$restore_file
 			fi
 
-			if [ $COMPRESSION == "bz2" ] ;then
+			if [[ $COMPRESSION == "bz2" ]] ;then
 				printf '.bz2 ... '
 				filedump="$BACKUP_DIR/$db/$db-$table.sql.gz"
 				restorefiledump=$(basename $filedump)
@@ -401,7 +401,7 @@ for db in $databaselist; do
 				bunzip2 < $db/$restorefiledump | mysql \$MYSQL_HUP --default-character-set=utf8 \$RESTOREDB" >>$restore_file
 			fi
 
-			if [ $COMPRESSION == "none" ] ;then
+			if [[ $COMPRESSION == "none" ]] ;then
 				printf ' ... '
 				filedump="$BACKUP_DIR/$db/$db-$table.sql"
 				restorefiledump=$(basename $filedump)
