@@ -1,6 +1,6 @@
 # rsnapshot-mysql
 
-This is a bash script that allows to pull all MySQL databases from any host, creating One File Per Table and a convenient restore script for each database. Plus, this script is [rsnapshot](https://github.com/rsnapshot/rsnapshot)-friendly, meaning you can use it with the "backup_script" feature of *rsnapshot*.
+This is a bash script that allows to automatically pull ALL databases from MySQL/MariaDB servers, remote or local, for backup purposes, creating "One Dump File Per Table" and a convenient restore script for each database. Plus, this script is [rsnapshot](https://github.com/rsnapshot/rsnapshot)-friendly, meaning you can use it with the "backup_script" feature of *rsnapshot*.
 
 Features:
   - Handle dumps from local or remote MySQL hosts.
