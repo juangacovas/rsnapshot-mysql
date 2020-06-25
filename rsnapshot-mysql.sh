@@ -45,13 +45,13 @@ MYSQL_EXCLUDE_TABLES="(\.sp_geodb_)"
 # File to hold [client] host, port, user and password (data source)
 MYSQL_CNF_FILE="/root/rsnapshot-mysql.cnf"
 
-# This is the format for the credentials at cnf file:
+# This is the format for the credentials at cnf file (note that i.e. host, port are optional):
 #
 # [client]
 # user = db_username
 # password = yourpassword
-### host = xxx
-### port = 3306
+# host = xxx
+# port = 3306
 
 # Suffix to database name for the restore script (so you do not accidentally restore tables over the existing database).
 # The restore script will try to create databasename plus RESTOREDB_SUFFIX, and will DROP TABLES if they exist.
